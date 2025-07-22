@@ -14,6 +14,7 @@ export default function Actions({loadingActions, actions}){
               <tr>
                 <th>Incident</th>
                 <th>Type d'action</th>
+                <th>Commentaire</th>
                 <th>Action</th>
                 <th>Acteur</th>
               </tr>
@@ -23,7 +24,8 @@ export default function Actions({loadingActions, actions}){
                 <tr key={idx}>
                   <td>{action.incident}</td>
                   <td>{action.type_action === 'Autre' ? action.type_action_autre : action.type_action}</td>
-                  <td>{action.destination === 'Autre' ? action.destination_autre+' ': action.destination ? action.destination+' ' : ''}{action.script ? action.script+' ' : ''}{action.parent ? action.parent+' ' : ''}{action.probleme ? action.probleme+' ' : ''}</td>
+                  <td>{action.commentaire}</td>
+                  <td>{action.destination === 'Autre' ? `(${action.destination_autre}) ` : action.destination ? `(${action.destination}) ` : ''}{action.script ? `(${action.script}) ` : ''}{action.parent ? `(${action.parent}) ` : ''}{action.probleme ? `(${action.probleme}) ` : ''}</td>
                   <td>{action.user_action}</td>
                 </tr>
               ))}

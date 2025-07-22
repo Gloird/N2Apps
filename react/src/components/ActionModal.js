@@ -19,7 +19,7 @@ export default function ActionModal({
     incidentInput: "",
     type_action: "Transfert",
     commentaire: "",
-    destination: "Equipe A",
+    destination: "",
     destination_autre: "",
     script: "",
     parent: "",
@@ -363,8 +363,11 @@ export default function ActionModal({
             >
               <option>Transfert</option>
               <option>Cloturé</option>
-              <option>Renvoyer</option>
+              <option>Renvoyé</option>
               <option>Lié</option>
+              <option>Message envoyé</option>
+              <option>Reponse au refus</option>
+              <option>Création JIRA</option>
               <option>Autre</option>
             </Form.Control>
             {actionForm.type_action === "Autre" && (
@@ -443,15 +446,34 @@ export default function ActionModal({
               </Form.Group>
             </Col>
           </Row>
-          <Form.Group className="mb-3">
-            <Form.Label>Script</Form.Label>
-            <Form.Control
-              as="text"
-              placeholder="Numéro du script"
-              value={actionForm.script}
-              onChange={(e) => handleActionFormChange("script", e.target.value)}
-            />
-          </Form.Group>
+          <Row>
+            <Col>
+              <Form.Group className="mb-3">
+                <Form.Label>Script</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Numéro du script"
+                  value={actionForm.script}
+                  onChange={(e) =>
+                    handleActionFormChange("script", e.target.value)
+                  }
+                />
+              </Form.Group>
+            </Col>
+            <Col>
+              <Form.Group className="mb-3">
+                <Form.Label>JIRA</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Numéro du JIRA"
+                  value={actionForm.ticket_jira}
+                  onChange={(e) =>
+                    handleActionFormChange("ticket_jira", e.target.value)
+                  }
+                />
+              </Form.Group>
+            </Col>
+          </Row>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={onHide}>
