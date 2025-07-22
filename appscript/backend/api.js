@@ -3,6 +3,7 @@
 //id;incident;date_action;type_action;commentaire;destination;destination_autre;script;parent;probleme
 
 const SHEET_ID_N2APPS = PropertiesService.getScriptProperties().getProperty('SHEET_ID_N2APPS')
+const ENABLED_CHAT_MESSAGE = false;
 
 /**
  * Fetches actions from the database.
@@ -33,7 +34,7 @@ function getActionById(id){
     const actions = getActions()
     for (let i = 0; i < actions.length; i++) {
         if (actions[i].id == id) {
-            return actions[i]
+            return {...actions[i], index:i+1}
         }
     }
     return null
@@ -78,8 +79,11 @@ function addAction(action) {
 ${action.ticket_jira ? action.ticket_jira : ''}
 
 ${action.user_action} `
-    sendMessage({ text: message, formattedText: message })
-
+    if(ENABLED_CHAT_MESSAGE){
+        sendMessage({ text: message, formattedText: message })
+    }else{
+        console.log("Chat message disabled, not sending:", message);
+    }
     
     return action;
 }
@@ -101,12 +105,13 @@ function updateAction(action) {
 
     const N2APPS = SpreadsheetApp.openById(SHEET_ID_N2APPS);
     const actionsSheet = N2APPS.getSheetByName("actions");
-    const rowIndex = existingAction.id; // Assuming ID corresponds to row index
+    const rowIndex = existingAction.index; // Assuming ID corresponds to row index
 
     
     var headers = actionsSheet.getRange(1, 1, 1, actionsSheet.getLastColumn()).getValues()[0];
     var row = headers.map(h => action[h] || "");
-    actionsSheet.getRange(rowIndex + 1, 1, 1, actionsSheet.getLastColumn()).setValues([row]);
+    console.log("Updating action at row index:", rowIndex, "with data:", row);
+    actionsSheet.getRange(rowIndex+1, 1, 1, actionsSheet.getLastColumn()).setValues([row]);
 
     return action;
 }
@@ -212,4 +217,26 @@ function updateIncident(incident) {
     incidentsSheet.getRange(rowIndex + 1, 1, 1, incidentsSheet.getLastColumn()).setValues([row]);
 
     return getIncidentById(incident.incident);
+}
+
+const FOLDER_ID_UPLOAD_FILE = PropertiesService.getScriptProperties().getProperty('FOLDER_ID_UPLOAD_FILE');
+
+function uploadFile(fileContent, fileName, fileType) {
+  try {
+    // Convertir la chaîne Base64 en un tableau de bytes
+    var bytes = Utilities.base64Decode(fileContent);
+
+    // Créer un blob à partir des bytes
+    var blob = Utilities.newBlob(bytes, fileType, fileName);
+
+    // Spécifiez le dossier où vous voulez uploader les fichiers
+    var folderId = FOLDER_ID_UPLOAD_FILE;
+    var folder = DriveApp.getFolderById(folderId);
+
+    // Créer le fichier dans Google Drive
+    var file = folder.createFile(blob);
+    return { status: 'success', fileId: file.getId() , fileUrl: file.getDownloadUrl()};
+  } catch (error) {
+    return { status: 'error', message: error.toString() };
+  }
 }

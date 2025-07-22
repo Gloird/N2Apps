@@ -1,6 +1,24 @@
-import React, { useState } from "react";
-import { Modal, Button, Form, Row, Col, Spinner, Badge } from "react-bootstrap";
+import React, { useState, useRef } from "react";
+import { Modal, Button, Form, Row, Col, Badge } from "react-bootstrap";
 import MotifCollapse from "./MotifCollapse";
+import { use } from "react";
+import { useEffect } from "react";
+
+const DEFAULT_ACTION = {
+  id: null,
+  incident: "",
+  incidentInput: "",
+  type_action: "Transfert",
+  commentaire: "",
+  destination: "",
+  destination_autre: "",
+  script: "",
+  parent: "",
+  probleme: "",
+  files: [],
+  ticket_jira: "",
+  type_action_autre: "",
+};
 
 export default function ActionModal({
   show,
@@ -11,20 +29,31 @@ export default function ActionModal({
   handleClose,
   onError,
   fetchLastActions,
+  action,
 }) {
   // Pour l'autocomplétion
   const [suggestions, setSuggestions] = useState([]);
-  const [actionForm, setActionForm] = useState({
-    incident: "",
-    incidentInput: "",
-    type_action: "Transfert",
-    commentaire: "",
-    destination: "",
-    destination_autre: "",
-    script: "",
-    parent: "",
-    probleme: "",
-  });
+  const [readOnly, setReadOnly] = useState(false);
+  const inputFile = useRef(null);
+  const [actionForm, setActionForm] = useState(DEFAULT_ACTION);
+
+  useEffect(() => {
+    console.log("ActionForm updated:", action);
+    if (action === null || action === undefined) {
+      // Réinitialiser le formulaire si aucune action n'est sélectionnée
+      setActionForm(DEFAULT_ACTION);
+      setReadOnly(false);
+      return;
+    } else {
+      // Réinitialiser le formulaire si l'action est modifiée
+      setActionForm(() => ({
+        ...action,
+        incidentInput: action.incident,
+        files: action.files !== "" ? JSON.parse(action.files) : [],
+      }));
+      setReadOnly(true); // Passer en mode lecture seule si une action est sélectionnée
+    }
+  }, []);
 
   // Recherche de l'incident sélectionné ou saisi
   const selectedIncident = incidents.find(
@@ -42,9 +71,10 @@ export default function ActionModal({
           ? actionForm.type_action_autre
           : actionForm.type_action,
       date_action: new Date().toISOString(),
+      files: JSON.stringify(actionForm.files),
     };
     if (window.google && window.google.script && window.google.script.run) {
-      window.google.script.run
+      var callBackend = window.google.script.run
         .withSuccessHandler(() => {
           handleClose();
           fetchLastActions(); // Recharger les actions après l'ajout
@@ -52,7 +82,11 @@ export default function ActionModal({
         .withFailureHandler(() => {
           onError("Erreur lors de l'enregistrement de l'action");
         })
-        .addAction(action);
+        if(action.id === null || action.id === undefined){ 
+          callBackend.addAction(action);
+        } else {
+          callBackend.updateAction(action);
+        }
     } else {
       onError("google.script.run non disponible");
     }
@@ -120,10 +154,66 @@ export default function ActionModal({
     }
   };
 
+  const handleUploadFile = () => {
+    if (window.google && window.google.script && window.google.script.run) {
+      if (inputFile.current.files.length > 0) {
+        const file = inputFile.current.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+          const fileContent = e.target.result.split(",")[1];
+          const fileName = file.name;
+          const fileType = file.type;
+          window.google.script.run
+            .withSuccessHandler((result) => {
+              console.log("Fichier envoyé avec succès", result);
+              setActionForm((prev) => ({
+                ...prev,
+                files: [
+                  ...prev.files,
+                  {
+                    fileId: result.fileId,
+                    fileUrl: result.fileUrl,
+                    fileName: fileName,
+                    fileType: fileType,
+                  },
+                ],
+              }));
+              inputFile.current.value = ""; // Réinitialiser le champ de fichier
+            })
+            .withFailureHandler(() => {
+              onError("Erreur lors de l'envoi du fichier");
+            })
+            .uploadFile(fileContent, fileName, fileType);
+        };
+
+        reader.readAsDataURL(file);
+      }
+    } else {
+      onError("google.script.run non disponible");
+    }
+  };
+
+  const handleEditMode = () => {
+    setReadOnly(false); // Passe la modal en mode édition
+  };
+
   return (
     <Modal show={show} onHide={onHide}>
       <Modal.Header closeButton>
-        <Modal.Title>Ajouter une action sur un incident</Modal.Title>
+        {!readOnly && actionForm.id === null && (
+          <Modal.Title>Ajouter une action sur un incident</Modal.Title>
+        )}
+        {readOnly && (
+          <Modal.Title>
+            Action sur l'incident {actionForm.incident} #{actionForm.id}
+          </Modal.Title>
+        )}
+        {!readOnly && actionForm.id !== null && (
+          <Modal.Title>
+            Modifier l'action {actionForm.incident} #{actionForm.id}
+          </Modal.Title>
+        )}
       </Modal.Header>
       <Form onSubmit={handleSubmit}>
         <Modal.Body>
@@ -149,7 +239,7 @@ export default function ActionModal({
                   overflowY: "auto",
                 }}
               >
-                {suggestions.map((inc, idx) => (
+                {suggestions?.map((inc, idx) => (
                   <div
                     key={inc.incident || idx}
                     style={{ padding: "4px 8px", cursor: "pointer" }}
@@ -199,7 +289,7 @@ export default function ActionModal({
                           "noSoc",
                           selectedIncident.noSoc
                         )
-                          .map((inc) => inc.incident)
+                          ?.map((inc) => inc.incident)
                           .join(",")}
                       >
                         {
@@ -224,7 +314,7 @@ export default function ActionModal({
                           "noContrat",
                           selectedIncident.noContrat
                         )
-                          .map((inc) => inc.incident)
+                          ?.map((inc) => inc.incident)
                           .join(",")}
                       >
                         {
@@ -251,7 +341,7 @@ export default function ActionModal({
                           "noDevis",
                           selectedIncident.noDevis
                         )
-                          .map((inc) => inc.incident)
+                          ?.map((inc) => inc.incident)
                           .join(",")}
                       >
                         {
@@ -276,7 +366,7 @@ export default function ActionModal({
                           "noProspect",
                           selectedIncident.noProspect
                         )
-                          .map((inc) => inc.incident)
+                          ?.map((inc) => inc.incident)
                           .join(",")}
                       >
                         {
@@ -303,7 +393,7 @@ export default function ActionModal({
                           "noPers",
                           selectedIncident.noPers
                         )
-                          .map((inc) => inc.incident)
+                          ?.map((inc) => inc.incident)
                           .join(",")}
                       >
                         {
@@ -328,7 +418,7 @@ export default function ActionModal({
                           "noSinistre",
                           selectedIncident.noSinistre
                         )
-                          .map((inc) => inc.incident)
+                          ?.map((inc) => inc.incident)
                           .join(",")}
                       >
                         {
@@ -402,7 +492,7 @@ export default function ActionModal({
                 handleActionFormChange("destination", e.target.value)
               }
             >
-              {destinations.map((dest) => (
+              {destinations?.map((dest) => (
                 <option key={dest}>{dest}</option>
               ))}
             </Form.Control>
@@ -474,14 +564,88 @@ export default function ActionModal({
               </Form.Group>
             </Col>
           </Row>
+          <Form.Group className="mb-3">
+            <Form.Label>Piece Jointe</Form.Label>
+            <Form.Text className="text-muted d-block">
+              {actionForm.files.map((f) => (
+                <a href={f.fileUrl} target="_blank" rel="noopener noreferrer">
+                  {f.fileName}
+                </a>
+              ))}
+            </Form.Text>
+            {!readOnly && (
+              <>
+                <Form.Control type="file" ref={inputFile} />
+                <Button
+                  variant="secondary"
+                  className="mt-2"
+                  disabled={readOnly}
+                  onClick={handleUploadFile}
+                >
+                  Ajouter une piece jointe
+                </Button>
+              </>
+            )}
+          </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={onHide}>
-            Annuler
-          </Button>
-          <Button variant="primary" type="submit">
-            Enregistrer
-          </Button>
+          {readOnly === false && (
+            <>
+              <Button variant="secondary" onClick={onHide}>
+                Annuler
+              </Button>
+              <Button
+                variant="primary"
+                type="submit"
+                disabled={loadingIncidents}
+              >
+                Enregistrer
+              </Button>
+            </>
+          )}
+          {readOnly === true && (
+            <>
+              <Button
+                variant="warning"
+                onClick={() => {
+                  // Appelle la fonction pour activer le mode édition (à définir dans le parent)
+                  if (typeof handleEditMode === "function") handleEditMode();
+                }}
+              >
+                Modifier
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Voulez-vous vraiment supprimer cette action ?"
+                    )
+                  ) {
+                    if (
+                      window.google &&
+                      window.google.script &&
+                      window.google.script.run
+                    ) {
+                      window.google.script.run
+                        .withSuccessHandler(() => {
+                          onHide();
+                          fetchLastActions();
+                        })
+                        .withFailureHandler(() => {
+                          onError("Erreur lors de la suppression de l'action");
+                        })
+                        .deleteAction(actionForm.id); // Assure-toi que l'id est bien passé
+                    } else {
+                      onError("google.script.run non disponible");
+                    }
+                  }
+                }}
+              >
+                Supprimer
+              </Button>
+            </>
+          )}
         </Modal.Footer>
       </Form>
     </Modal>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Spinner, Alert, Table } from 'react-bootstrap';
 
-export default function Actions({loadingActions, actions}){
+export default function Actions({loadingActions, actions,onSelected}){
     if(loadingActions) {
         return <Spinner animation="border" />
     }
@@ -9,19 +9,19 @@ export default function Actions({loadingActions, actions}){
         return <Alert variant="info">Aucune action récente</Alert>
     }
     return (
-          <Table striped bordered hover size="sm">
+          <Table striped bordered hover size="sm" className='table'>
             <thead>
               <tr>
-                <th>Incident</th>
-                <th>Type d'action</th>
-                <th>Commentaire</th>
-                <th>Action</th>
-                <th>Acteur</th>
+                <th scope="col">Incident</th>
+                <th scope="col">Type d'action</th>
+                <th scope="col">Commentaire</th>
+                <th scope="col">Action</th>
+                <th scope="col">Acteur</th>
               </tr>
             </thead>
             <tbody>
               {actions.map((action, idx) => (
-                <tr key={idx}>
+                <tr key={idx} onClick={() => onSelected(action)} style={{ cursor: 'pointer' }}>
                   <td>{action.incident}</td>
                   <td>{action.type_action === 'Autre' ? action.type_action_autre : action.type_action}</td>
                   <td>{action.commentaire}</td>
