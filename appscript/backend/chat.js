@@ -1,4 +1,4 @@
-const GOOGLE_CHAT_WEBHOOK_LINK = "https://chat.googleapis.com/v1/spaces/AAQADm5YrcQ/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=HICb40NUM5cWyq1LVfbUmjKABNlhrl0VoukUsWUe51s"
+const GOOGLE_CHAT_WEBHOOK_LINK =  PropertiesService.getScriptProperties().getProperty('GOOGLE_CHAT_WEBHOOK_LINK')
 
 /**
  * Fonction qui permet d'envoyer un message dans le chat

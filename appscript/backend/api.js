@@ -2,7 +2,7 @@
 //structure actions
 //id;incident;date_action;type_action;commentaire;destination;destination_autre;script;parent;probleme
 
-const SHEET_ID_N2APPS = "1IHNA7QOqeI5bzTa5Mx6AqNFwTk-ekZPBed5GfoTqqzE"
+const SHEET_ID_N2APPS = PropertiesService.getScriptProperties().getProperty('SHEET_ID_N2APPS')
 
 /**
  * Fetches actions from the database.
@@ -74,6 +74,9 @@ function addAction(action) {
     
 
     let message = `${action.incident} : ${action.type_action === "Autre" ? action.type_action_autre : action.type_action} ${action.destination === "Autre" ? action.destination_autre : action.destination} ${action.commentaire}
+
+${action.ticket_jira ? action.ticket_jira : ''}
+
 ${action.user_action} `
     sendMessage({ text: message, formattedText: message })
 
@@ -146,7 +149,7 @@ function getLastActions() {
 //structure incidents
 //incident;date;motif;sujet;url;noSoc;noContrat;noDevis;noProspect;noPers;noSinistre;object
 
-const SHEET_ID_N2INCIDENTS = "1AVhAs1_WzRtjQ45Q5a3Qh0zrOd384HmY8zoy3vB5DYM"
+const SHEET_ID_N2INCIDENTS = PropertiesService.getScriptProperties().getProperty('SHEET_ID_N2INCIDENTS')
 
 /**
  * Fetches incidents from the database.
