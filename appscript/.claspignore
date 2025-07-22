@@ -1,0 +1,5 @@
+!build/main.js
+!appsscript.json
+**/node_modules/**
+Frontend/src/**
+.git/**

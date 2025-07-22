@@ -1,0 +1,53 @@
+{
+  "name": "n2apps",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@types/google-apps-script": "^1.0.99",
+    "bootstrap": "^5.3.7",
+    "gas-react": "^0.2.1",
+    "react": "^19.1.0",
+    "react-bootstrap": "^2.10.10",
+    "react-dom": "^19.1.0",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "postbuild": "node copy-build-to-backend.js",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "before_build": "node before_build.js",
+    "bundle": "gas-react bundle --output-file-name 'frontend/index'",
+    "bundle2": "gas-react bundle && npm run before_build",
+    "push_clasp": "cd .. && clasp push",
+    "pull_clasp": "cd .. && clasp pull",
+    "build_push": "npm run bundle && npm run push_clasp",
+    "pull-appscript": "cd ../appscript && clasp pull",
+    "push-appscript": "cd ../appscript && clasp push",
+    "build-and-push": "npm run build && npm run push-appscript"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
