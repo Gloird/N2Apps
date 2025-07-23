@@ -29,7 +29,7 @@ export default function SearchIncidentModal({ show, onHide, incidents, actions }
 
   return (
     <Modal fullscreen={true} show={show} onHide={onHide} size="xl" >
-      <Modal.Header closeButton>
+      <Modal.Header closeButton closeVariant="white">
         <Modal.Title>Recherche d'incidents</Modal.Title>
       </Modal.Header>
       <Modal.Body>

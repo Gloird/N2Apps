@@ -23,9 +23,9 @@ export default function Actions({loadingActions, actions,onSelected}){
               {actions.map((action, idx) => (
                 <tr key={idx} onClick={() => onSelected(action)} style={{ cursor: 'pointer' }}>
                   <td>{action.incident}</td>
-                  <td>{action.type_action === 'Autre' ? action.type_action_autre : action.type_action}</td>
+                  <td>{action.type_action === 'Autre' ? action.type_action_autre : action.type_action} {action.destination === 'Autre' ? ` (${action.destination_autre})` : action.destination ? `(${action.destination}) ` : ''}</td>
                   <td>{action.commentaire}</td>
-                  <td>{action.destination === 'Autre' ? `(${action.destination_autre}) ` : action.destination ? `(${action.destination}) ` : ''}{action.script ? `(${action.script}) ` : ''}{action.parent ? `(${action.parent}) ` : ''}{action.probleme ? `(${action.probleme}) ` : ''}</td>
+                  <td>{action.script ? `\nScript : ${action.script} ` : ''}{action.parent ? `\nParent : ${action.parent} ` : ''}{action.probleme ? `\nProbleme : ${action.probleme} ` : ''} {action.ticket_jira ? `\nJira : ${action.ticket_jira}` : ''}</td>
                   <td>{action.user_action}</td>
                 </tr>
               ))}

@@ -19,6 +19,14 @@ const DEFAULT_ACTION = {
   type_action_autre: "",
 };
 
+function getThumbnailUrl(file) {
+  // Currently supports Google Drive, can be extended for other providers
+  if (file.fileId && file.fileType && file.fileType.startsWith("image/")) {
+    return "https://drive.google.com/thumbnail?id="+file.fileId+"&sz=w1000";
+  }
+  return file.fileUrl;
+}
+
 export default function ActionModal({
   show,
   onHide,
@@ -36,6 +44,7 @@ export default function ActionModal({
   const inputFile = useRef(null);
   const [actionForm, setActionForm] = useState(DEFAULT_ACTION);
   const [loading, setLoading] = useState(false);
+  const [loadingPieceJointe, setLoadingPieceJointe] = useState(false);
 
   useEffect(() => {
     console.log("ActionForm updated:", action);
@@ -71,7 +80,7 @@ export default function ActionModal({
         actionForm.type_action === "Autre"
           ? actionForm.type_action_autre
           : actionForm.type_action,
-      date_action: new Date().toISOString(),
+      date: new Date().toISOString(),
       files: JSON.stringify(actionForm.files),
     };
     if (window.google && window.google.script && window.google.script.run) {
@@ -159,6 +168,7 @@ export default function ActionModal({
   };
 
   const handleUploadFile = () => {
+    setLoadingPieceJointe(true);
     if (window.google && window.google.script && window.google.script.run) {
       if (inputFile.current.files.length > 0) {
         const file = inputFile.current.files[0];
@@ -170,6 +180,7 @@ export default function ActionModal({
           const fileType = file.type;
           window.google.script.run
             .withSuccessHandler((result) => {
+              setLoadingPieceJointe(false);
               console.log("Fichier envoyé avec succès", result);
               setActionForm((prev) => ({
                 ...prev,
@@ -186,6 +197,7 @@ export default function ActionModal({
               inputFile.current.value = ""; // Réinitialiser le champ de fichier
             })
             .withFailureHandler(() => {
+              setLoadingPieceJointe(false);
               onError("Erreur lors de l'envoi du fichier");
             })
             .uploadFile(fileContent, fileName, fileType);
@@ -194,6 +206,7 @@ export default function ActionModal({
         reader.readAsDataURL(file);
       }
     } else {
+      setLoadingPieceJointe(false);
       onError("google.script.run non disponible");
     }
   };
@@ -572,7 +585,11 @@ export default function ActionModal({
             <Form.Label>Piece Jointe</Form.Label>
             <Form.Text className="text-muted d-block">
               {actionForm.files.map((f) => (
-                <a href={f.fileUrl} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={getThumbnailUrl(f)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   {f.fileName}
                 </a>
               ))}
@@ -583,10 +600,19 @@ export default function ActionModal({
                 <Button
                   variant="secondary"
                   className="mt-2"
-                  disabled={readOnly}
                   onClick={handleUploadFile}
+                  disabled={loadingPieceJointe}
                 >
-                  Ajouter une piece jointe
+                {loadingPieceJointe && (
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    role="status"
+                    aria-hidden="true"
+                  />
+                )}
+                {!loadingPieceJointe && "Ajouter une pièce jointe"}
                 </Button>
               </>
             )}
