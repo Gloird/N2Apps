@@ -1,7 +1,6 @@
 import React, { useState, useRef } from "react";
-import { Modal, Button, Form, Row, Col, Badge } from "react-bootstrap";
+import { Modal, Button, Form, Row, Col, Badge, Spinner } from "react-bootstrap";
 import MotifCollapse from "./MotifCollapse";
-import { use } from "react";
 import { useEffect } from "react";
 
 const DEFAULT_ACTION = {
@@ -36,6 +35,7 @@ export default function ActionModal({
   const [readOnly, setReadOnly] = useState(false);
   const inputFile = useRef(null);
   const [actionForm, setActionForm] = useState(DEFAULT_ACTION);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     console.log("ActionForm updated:", action);
@@ -62,6 +62,7 @@ export default function ActionModal({
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setLoading(true);
     const action = {
       ...actionForm,
       destination_autre:
@@ -77,17 +78,20 @@ export default function ActionModal({
       var callBackend = window.google.script.run
         .withSuccessHandler(() => {
           handleClose();
+          setLoading(false);
           fetchLastActions(); // Recharger les actions après l'ajout
         })
         .withFailureHandler(() => {
+          setLoading(false);
           onError("Erreur lors de l'enregistrement de l'action");
-        })
-        if(action.id === null || action.id === undefined){ 
-          callBackend.addAction(action);
-        } else {
-          callBackend.updateAction(action);
-        }
+        });
+      if (action.id === null || action.id === undefined) {
+        callBackend.addAction(action);
+      } else {
+        callBackend.updateAction(action);
+      }
     } else {
+      setLoading(false);
       onError("google.script.run non disponible");
     }
   };
@@ -200,7 +204,7 @@ export default function ActionModal({
 
   return (
     <Modal show={show} onHide={onHide}>
-      <Modal.Header closeButton>
+      <Modal.Header closeButton closeVariant="white">
         {!readOnly && actionForm.id === null && (
           <Modal.Title>Ajouter une action sur un incident</Modal.Title>
         )}
@@ -594,12 +598,17 @@ export default function ActionModal({
               <Button variant="secondary" onClick={onHide}>
                 Annuler
               </Button>
-              <Button
-                variant="primary"
-                type="submit"
-                disabled={loadingIncidents}
-              >
-                Enregistrer
+              <Button variant="primary" type="submit" disabled={loading}>
+                {loading && (
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    role="status"
+                    aria-hidden="true"
+                  />
+                )}
+                {!loading && "Enregistrer"}
               </Button>
             </>
           )}

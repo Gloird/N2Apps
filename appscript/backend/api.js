@@ -3,7 +3,7 @@
 //id;incident;date_action;type_action;commentaire;destination;destination_autre;script;parent;probleme
 
 const SHEET_ID_N2APPS = PropertiesService.getScriptProperties().getProperty('SHEET_ID_N2APPS')
-const ENABLED_CHAT_MESSAGE = false;
+const ENABLED_CHAT_MESSAGE = true;
 
 /**
  * Fetches actions from the database.
@@ -74,10 +74,9 @@ function addAction(action) {
     actionsSheet.appendRow(row);
     
 
-    let message = `${action.incident} : ${action.type_action === "Autre" ? action.type_action_autre : action.type_action} ${action.destination === "Autre" ? action.destination_autre : action.destination} ${action.commentaire}
-
+    let message = `${action.incident} : [${action.type_action === "Autre" ? action.type_action_autre : action.type_action}] ${action.destination === "Autre" ? action.destination_autre : action.destination} 
+${action.commentaire}
 ${action.ticket_jira ? action.ticket_jira : ''}
-
 ${action.user_action} `
     if(ENABLED_CHAT_MESSAGE){
         sendMessage({ text: message, formattedText: message })
